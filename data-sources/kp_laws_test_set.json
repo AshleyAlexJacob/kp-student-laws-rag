@@ -1,0 +1,588 @@
+[
+  {
+    "id": "kp-01",
+    "question": "What is the maximum average weight of a school bag for a Grade 5 student in Khyber Pakhtunkhwa?",
+    "ground_truth": "Under the Schedule of the School Bags (Limitation of Weight) Act, 2020, the average school bag weight for Grade 5 must not exceed 5.3 kg.",
+    "question_type": "factual",
+    "sections": "Section 3, Schedule",
+    "source_files": [
+      "1415_kp_school_bags_limitation_of_weight_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa School Bags (Limitation of Weight) Act, 2020"
+    ],
+    "years": [
+      2020
+    ]
+  },
+  {
+    "id": "kp-02",
+    "question": "What school bag weight limit applies to Pre-Grade 1 and to Grade 12?",
+    "ground_truth": "Pre-Grade 1: 1.5 kg. Grade 12: 7.0 kg (the same as Grade 11).",
+    "question_type": "numeric",
+    "sections": "Schedule",
+    "source_files": [
+      "1415_kp_school_bags_limitation_of_weight_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa School Bags (Limitation of Weight) Act, 2020"
+    ],
+    "years": [
+      2020
+    ]
+  },
+  {
+    "id": "kp-03",
+    "question": "What is the penalty if a private school violates the school bag weight law?",
+    "ground_truth": "The management of a non-public educational institution is liable to a fine of up to Rs. 200,000. For public sector institutions, the head of the institution faces disciplinary action under the relevant rules.",
+    "question_type": "factual",
+    "sections": "Section 5",
+    "source_files": [
+      "1415_kp_school_bags_limitation_of_weight_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa School Bags (Limitation of Weight) Act, 2020"
+    ],
+    "years": [
+      2020
+    ]
+  },
+  {
+    "id": "kp-04",
+    "question": "Who enforces the school bag weight limits in public and private schools?",
+    "ground_truth": "For public sector institutions, the Elementary and Secondary Education Department through the Directorate of Elementary and Secondary Education and EMA. For private sector institutions, PSRA.",
+    "question_type": "factual",
+    "sections": "Section 3(2)",
+    "source_files": [
+      "1415_kp_school_bags_limitation_of_weight_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa School Bags (Limitation of Weight) Act, 2020"
+    ],
+    "years": [
+      2020
+    ]
+  },
+  {
+    "id": "kp-05",
+    "question": "Do deeni madaris have to follow the school bag weight law?",
+    "ground_truth": "Yes. 'Educational institutions' include public, private, autonomous and semi-autonomous institutions, deeni madaris and other institutions teaching from play group to grade 12 in Khyber Pakhtunkhwa.",
+    "question_type": "factual",
+    "sections": "Section 2(a)",
+    "source_files": [
+      "1415_kp_school_bags_limitation_of_weight_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa School Bags (Limitation of Weight) Act, 2020"
+    ],
+    "years": [
+      2020
+    ]
+  },
+  {
+    "id": "kp-06",
+    "question": "Who are the members of the Khyber Pakhtunkhwa Education Monitoring Authority?",
+    "ground_truth": "The Secretary of the Elementary and Secondary Education Department (Chairperson), the Director General of the Authority, and the Director, Elementary and Secondary Education. The Authority may also nominate co-opted members, who have no vote.",
+    "question_type": "list",
+    "sections": "Section 3",
+    "source_files": [
+      "1386_kp_educational_monitoring_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019"
+    ],
+    "years": [
+      2019
+    ]
+  },
+  {
+    "id": "kp-07",
+    "question": "How many times a year must the Education Monitoring Authority meet?",
+    "ground_truth": "Not less than four times during a calendar year.",
+    "question_type": "numeric",
+    "sections": "Section 4",
+    "source_files": [
+      "1386_kp_educational_monitoring_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019"
+    ],
+    "years": [
+      2019
+    ]
+  },
+  {
+    "id": "kp-08",
+    "question": "From which officers is the Director General of the Education Monitoring Authority posted?",
+    "ground_truth": "From PMS/PAS officers in Basic Pay Scale 19 or above. The Director General is the chief executive officer of the Authority.",
+    "question_type": "factual",
+    "sections": "Section 8",
+    "source_files": [
+      "1386_kp_educational_monitoring_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019"
+    ],
+    "years": [
+      2019
+    ]
+  },
+  {
+    "id": "kp-09",
+    "question": "When must the Education Monitoring Authority prepare its annual report and who receives it?",
+    "ground_truth": "Within thirty working days of the close of the calendar year. The Director General submits it to the Secretary, who submits it to the Chief Secretary.",
+    "question_type": "factual",
+    "sections": "Section 13",
+    "source_files": [
+      "1386_kp_educational_monitoring_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019"
+    ],
+    "years": [
+      2019
+    ]
+  },
+  {
+    "id": "kp-10",
+    "question": "What happened to the Independent Monitoring Unit when the EMA Act came into force?",
+    "ground_truth": "The Independent Monitoring Unit, with all its assets and liabilities, was transferred to the Authority as a wing of it; its employees were deemed validly appointed on a regular basis and its sanctioned posts were transferred to the Authority.",
+    "question_type": "factual",
+    "sections": "Section 19",
+    "source_files": [
+      "1386_kp_educational_monitoring_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019"
+    ],
+    "years": [
+      2019
+    ]
+  },
+  {
+    "id": "kp-11",
+    "question": "What is the fine for operating an unregistered private high school compared with an unregistered primary school?",
+    "ground_truth": "Rs. 200,000 for a high school, higher secondary school, intermediate college or equivalent; Rs. 50,000 for a Montessori, kindergarten, tuition academy or centre, primary, lower middle or middle school or equivalent.",
+    "question_type": "numeric",
+    "sections": "Section 22(1)",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-12",
+    "question": "By how much can a private school increase its fee each year, and how often?",
+    "ground_truth": "The Regulatory Authority may sanction an annual fee increase of up to 10%. A school may not increase its fee more than once in an academic year, and the increase must be announced one month before the academic year starts.",
+    "question_type": "numeric",
+    "sections": "Section 8(2)(i)",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-13",
+    "question": "What fee concession must private schools give for siblings?",
+    "ground_truth": "The Regulatory Authority issues standing orders allowing a sibling fee concession of not less than 25% of the fee.",
+    "question_type": "numeric",
+    "sections": "Section 8(2)(h)",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-14",
+    "question": "How many private school and parent representatives sit on the Private Schools Regulatory Authority, and for how long?",
+    "ground_truth": "Four members from private schools (elected) and three members from parents (nominated), each for a fixed term of three years.",
+    "question_type": "list",
+    "sections": "Section 4(1)(f),(g) and 4(2)",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-15",
+    "question": "What are the rules on naming a private school in Khyber Pakhtunkhwa?",
+    "ground_truth": "A school may not be named after a prestigious or famous foreign institution unless it is an authorized branch approved by the Regulatory Authority; it may not be named after a national or international figure without prior Government permission; and its name must not encourage parochial, racial, tribal, religious or sectarian prejudice.",
+    "question_type": "factual",
+    "sections": "Section 25",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-16",
+    "question": "Can a Board affiliate a private school that is not registered with PSRA?",
+    "ground_truth": "No. No Board may affiliate a school unless it is registered with the Regulatory Authority. If a Board de-affiliates a school, the Authority must suspend its registration and issue a show cause notice.",
+    "question_type": "factual",
+    "sections": "Section 21(3),(4)",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-17",
+    "question": "Can an order of the Private Schools Regulatory Authority be challenged in court?",
+    "ground_truth": "No. Except where the Act provides otherwise, its orders are final and cannot be called in question in any court. An aggrieved person may file a review petition (against the Authority's order) or a revision petition (against a delegate's order) before the Authority, whose decision is final.",
+    "question_type": "factual",
+    "sections": "Sections 24 and 28",
+    "source_files": [
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-18",
+    "question": "For which age group does the Free Compulsory Primary and Secondary Education Act require free education?",
+    "ground_truth": "All children from five to sixteen years of age in Khyber Pakhtunkhwa.",
+    "question_type": "factual",
+    "sections": "Section 3(1)",
+    "source_files": [
+      "1325_free_compulsory_primary_and_secondary_education_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Free Compulsory Primary and Secondary Education Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-19",
+    "question": "What counts as a reasonable excuse for a child not attending school?",
+    "ground_truth": "The child cannot attend because of sickness, infirmity or mental incapacity, or peculiar circumstances make it undesirable; the child receives sufficient education elsewhere; or there is no school within a two-kilometre radius of the child's residence by the nearest route.",
+    "question_type": "list",
+    "sections": "Section 4",
+    "source_files": [
+      "1325_free_compulsory_primary_and_secondary_education_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Free Compulsory Primary and Secondary Education Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-20",
+    "question": "What is the punishment for parents who do not send their child to school after an order of the School Attendance Authority?",
+    "ground_truth": "On conviction before a Judicial Magistrate: imprisonment of up to one month, or a fine of up to Rs. 100 for every day the failure continues after conviction, or both. A court acts only on a written complaint by the School Attendance Authority.",
+    "question_type": "numeric",
+    "sections": "Section 6",
+    "source_files": [
+      "1325_free_compulsory_primary_and_secondary_education_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Free Compulsory Primary and Secondary Education Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-21",
+    "question": "How is money withdrawn from a school's Taleem Fund and who audits it?",
+    "ground_truth": "Withdrawals are made jointly by at least two members of the School Attendance Authority, and the accounts are audited by the Auditor General of Pakistan. The Fund is kept in a Scheduled Bank.",
+    "question_type": "factual",
+    "sections": "Section 7",
+    "source_files": [
+      "1325_free_compulsory_primary_and_secondary_education_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Free Compulsory Primary and Secondary Education Act, 2017"
+    ],
+    "years": [
+      2017
+    ]
+  },
+  {
+    "id": "kp-22",
+    "question": "Who chairs the Khyber Pakhtunkhwa Regional Languages Authority?",
+    "ground_truth": "The Minister for Elementary and Secondary Education, Khyber Pakhtunkhwa.",
+    "question_type": "factual",
+    "sections": "Section 4(1)(a)",
+    "source_files": [
+      "1280_promotion_of_regional_languages_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Promotion of Regional Languages Authority Act, 2012"
+    ],
+    "years": [
+      2012
+    ]
+  },
+  {
+    "id": "kp-23",
+    "question": "What is the quorum and meeting frequency of the Regional Languages Authority?",
+    "ground_truth": "Six members form the quorum. Besides an annual meeting in December, the Authority meets at least four times a calendar year.",
+    "question_type": "numeric",
+    "sections": "Section 5",
+    "source_files": [
+      "1280_promotion_of_regional_languages_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Promotion of Regional Languages Authority Act, 2012"
+    ],
+    "years": [
+      2012
+    ]
+  },
+  {
+    "id": "kp-24",
+    "question": "What is the punishment for not complying with a Competent Authority directive to delete or withdraw textbook content?",
+    "ground_truth": "Imprisonment of up to one year; the person is also guilty of gross misconduct, and the agency may be superseded by the authority that appointed or constituted it.",
+    "question_type": "factual",
+    "sections": "Section 4",
+    "source_files": [
+      "1273_supervision_of_curricula_textbooks_and_maintenance_of_standards_of_edu.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Supervision of Curricula, Textbooks and Maintenance of Standards of Education Act, 2011"
+    ],
+    "years": [
+      2011
+    ]
+  },
+  {
+    "id": "kp-25",
+    "question": "What powers does the Competent Authority have under the curricula and textbooks law?",
+    "ground_truth": "Prepare schemes of studies, curricula and textbook manuscripts; approve textbook manuscripts produced by other agencies; direct any person or agency to delete, amend or withdraw curriculum or textbook content; and direct development of a modern, up-to-date curriculum.",
+    "question_type": "list",
+    "sections": "Section 3(2)",
+    "source_files": [
+      "1273_supervision_of_curricula_textbooks_and_maintenance_of_standards_of_edu.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Supervision of Curricula, Textbooks and Maintenance of Standards of Education Act, 2011"
+    ],
+    "years": [
+      2011
+    ]
+  },
+  {
+    "id": "kp-26",
+    "question": "How long can the Director of the Institute of Management Sciences, Peshawar hold office?",
+    "ground_truth": "Initially for up to four years, with one further extension of up to four years on satisfactory performance; no further extension is allowed.",
+    "question_type": "factual",
+    "sections": "Section 6",
+    "source_files": [
+      "1225_institute_of_management_sciences_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Institute of Management Sciences Ordinance, 2002"
+    ],
+    "years": [
+      2002
+    ]
+  },
+  {
+    "id": "kp-27",
+    "question": "Who chairs the Board of Governors of the Institute of Management Sciences?",
+    "ground_truth": "The Chief Minister, Khyber Pakhtunkhwa.",
+    "question_type": "factual",
+    "sections": "Section 10(1)(i)",
+    "source_files": [
+      "1225_institute_of_management_sciences_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Institute of Management Sciences Ordinance, 2002"
+    ],
+    "years": [
+      2002
+    ]
+  },
+  {
+    "id": "kp-28",
+    "question": "How often must the IMSciences Academic Committee meet and what is the Selection Committee's quorum?",
+    "ground_truth": "The Academic Committee meets as often as possible but at least twice a year. Five members form the quorum of the Selection Committee.",
+    "question_type": "numeric",
+    "sections": "Sections 12(3) and 13(3)",
+    "source_files": [
+      "1225_institute_of_management_sciences_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Institute of Management Sciences Ordinance, 2002"
+    ],
+    "years": [
+      2002
+    ]
+  },
+  {
+    "id": "kp-29",
+    "question": "Who are the Chairman and Vice-Chairman of the ETEA Board of Governors?",
+    "ground_truth": "The Chief Minister of Khyber Pakhtunkhwa is the Chairman and the Minister for Education is the Vice-Chairman.",
+    "question_type": "list",
+    "sections": "Section 7(1)",
+    "source_files": [
+      "1214_kp_educational_testing_and_evaluation_agency_etea_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Educational Testing and Evaluation Agency Ordinance, 2001"
+    ],
+    "years": [
+      2001
+    ]
+  },
+  {
+    "id": "kp-30",
+    "question": "How is ETEA funded and who audits its accounts?",
+    "ground_truth": "ETEA works on a self-financing principle from fees, donations, trusts, bequests, endowments, grants and contributions. Its accounts are audited each year within four months of the close of the financial year by the Director Local Fund Audit, Khyber Pakhtunkhwa, and the auditor's report is laid before the Provincial Assembly.",
+    "question_type": "factual",
+    "sections": "Section 12",
+    "source_files": [
+      "1214_kp_educational_testing_and_evaluation_agency_etea_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Educational Testing and Evaluation Agency Ordinance, 2001"
+    ],
+    "years": [
+      2001
+    ]
+  },
+  {
+    "id": "kp-31",
+    "question": "How often does the ETEA Board meet and how much notice is required for a special meeting?",
+    "ground_truth": "At least twice a year. A special meeting needs at least ten clear days' notice and can be requisitioned in writing by not less than five members.",
+    "question_type": "numeric",
+    "sections": "Section 10",
+    "source_files": [
+      "1214_kp_educational_testing_and_evaluation_agency_etea_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Educational Testing and Evaluation Agency Ordinance, 2001"
+    ],
+    "years": [
+      2001
+    ]
+  },
+  {
+    "id": "kp-32",
+    "question": "Which education bodies in these laws are chaired by the Chief Minister of Khyber Pakhtunkhwa?",
+    "ground_truth": "The Board of Governors of ETEA (Ordinance 2001) and the Board of Governors of the Institute of Management Sciences (Ordinance 2002).",
+    "question_type": "cross_law",
+    "sections": "ETEA s.7; IMSciences s.10",
+    "source_files": [
+      "1214_kp_educational_testing_and_evaluation_agency_etea_ordinance.pdf",
+      "1225_institute_of_management_sciences_ordinance.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Educational Testing and Evaluation Agency Ordinance, 2001",
+      "Institute of Management Sciences Ordinance, 2002"
+    ],
+    "years": [
+      2001,
+      2002
+    ]
+  },
+  {
+    "id": "kp-33",
+    "question": "Which laws make the Secretary of the Elementary and Secondary Education Department the chairperson of an authority?",
+    "ground_truth": "The Education Monitoring Authority Act, 2019 (Chairperson of EMA) and the Private Schools Regulatory Authority Act, 2017 (Chairperson of PSRA).",
+    "question_type": "cross_law",
+    "sections": "EMA s.3; PSRA s.4",
+    "source_files": [
+      "1386_kp_educational_monitoring_authority_act.pdf",
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019",
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2019,
+      2017
+    ]
+  },
+  {
+    "id": "kp-34",
+    "question": "Which two laws are referenced by the School Bags Act for enforcement in public and private schools?",
+    "ground_truth": "The Education Monitoring Authority Act, 2019 (EMA, for public schools) and the Private Schools Regulatory Authority Act, 2017 (PSRA, for private schools).",
+    "question_type": "cross_law",
+    "sections": "School Bags s.2(b),(d) and s.3(2)",
+    "source_files": [
+      "1415_kp_school_bags_limitation_of_weight_act.pdf",
+      "1386_kp_educational_monitoring_authority_act.pdf",
+      "1359_kp_private_schools_regulatory_authority_act.pdf"
+    ],
+    "law_titles": [
+      "Khyber Pakhtunkhwa School Bags (Limitation of Weight) Act, 2020",
+      "Khyber Pakhtunkhwa Education Monitoring Authority Act, 2019",
+      "Khyber Pakhtunkhwa Private Schools Regulatory Authority Act, 2017"
+    ],
+    "years": [
+      2020,
+      2019,
+      2017
+    ]
+  },
+  {
+    "id": "kp-35",
+    "question": "What is the maximum monthly fee a private school in Peshawar may charge for Grade 5?",
+    "ground_truth": "The documents do not give a fee amount. The PSRA Act only says the Regulatory Authority determines the maximum fee based on its categorization of schools.",
+    "question_type": "unanswerable",
+    "sections": "PSRA s.8(2)(c),(d)",
+    "source_files": [],
+    "law_titles": [],
+    "years": []
+  },
+  {
+    "id": "kp-36",
+    "question": "What is the registration fee for an ETEA entry test?",
+    "ground_truth": "The documents do not state any entry test fee; the ETEA Ordinance only says the Agency's fund includes income from fees.",
+    "question_type": "unanswerable",
+    "sections": "ETEA s.12",
+    "source_files": [],
+    "law_titles": [],
+    "years": []
+  },
+  {
+    "id": "kp-37",
+    "question": "What is the punishment for cheating in a board examination?",
+    "ground_truth": "Not found in the documents provided. None of these laws sets a penalty for exam cheating.",
+    "question_type": "unanswerable",
+    "sections": "-",
+    "source_files": [],
+    "law_titles": [],
+    "years": []
+  }
+]
