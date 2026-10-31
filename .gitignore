@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Environment and Logs
+.env
+logs/
+qdrant_db/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS & Editor
+.DS_Store
+.idea/
+.vscode/
+.codegraph/
+.cursor/
+

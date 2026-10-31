@@ -1,0 +1,14 @@
+[project]
+name = "kp-laws-agent"
+version = "0.1.0"
+description = "KP Education Laws RAG Agent"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.35.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
