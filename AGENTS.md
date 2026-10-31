@@ -5,9 +5,9 @@ A chat agent that answers questions about 23 Khyber Pakhtunkhwa education laws (
 Every answer cites the law title, year and section or page. If the laws do not cover a question, the agent says so.
 
 ## Stack (do not change without asking)
-- Python 3.11+, package management with **uv** only (no pip, no requirements.txt)
+- Python 3.12, package management with **uv** only (no pip, no requirements.txt)
 - **LangChain v1 `create_agent`** for the agent; **LangGraph** only when a fixed multi-step flow is needed
-- **Qdrant local mode**: `QdrantClient(path="qdrant_db")`, collection `kp_laws`
+- **Qdrant Docker mode**: `QdrantClient`, collection `kp_laws`
 - **Streamlit** UI that imports the agent directly (no backend, no API server)
 - `pypdf` for PDF text, `python-dotenv` for keys
 - Provider switch in `config.py`: `openai` (default: `gpt-4o`, `text-embedding-3-small`) | `gemini` | `ollama`
