@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 import datetime
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -12,6 +13,7 @@ class Message:
         role: The role of the sender, typically 'user' or 'assistant'.
         content: The text message content.
         timestamp: Time string indicating when the message was sent.
+        sources: List of retrieved legal citations or statutory snippets.
     """
 
     role: str  # 'user' or 'assistant'
@@ -19,4 +21,5 @@ class Message:
     timestamp: str = field(
         default_factory=lambda: datetime.datetime.now().strftime("%I:%M %p")
     )
+    sources: List[Dict[str, Any]] = field(default_factory=list)
 
