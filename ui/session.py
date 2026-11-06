@@ -1,7 +1,7 @@
 """Session management and state storage for chat conversations."""
 
 import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 import uuid
 import streamlit as st
 
@@ -126,6 +126,9 @@ class SessionStore:
         role: str,
         content: str,
         sources: Optional[List[Dict[str, Any]]] = None,
+        verification_count: int = 0,
+        verification_status: str = "verified",
+        query_variants: Optional[List[str]] = None,
     ) -> None:
         """Add a message to the currently active session.
 
@@ -133,15 +136,28 @@ class SessionStore:
             role: Sender role ('user' or 'assistant').
             content: Text body of the message.
             sources: Optional list of retrieved legal citations.
+            verification_count: Number of verification passes performed.
+            verification_status: Status outcome of verification.
+            query_variants: Optional list of search query variants used.
         """
         session = self.get_active_session()
-        msg = Message(role=role, content=content, sources=sources or [])
+        msg = Message(
+            role=role,
+            content=content,
+            sources=sources or [],
+            verification_count=verification_count,
+            verification_status=verification_status,
+            query_variants=query_variants or [],
+        )
         session["messages"].append(
             {
                 "role": msg.role,
                 "content": msg.content,
                 "timestamp": msg.timestamp,
                 "sources": msg.sources,
+                "verification_count": msg.verification_count,
+                "verification_status": msg.verification_status,
+                "query_variants": msg.query_variants,
             }
         )
         # Update session title automatically on first user prompt

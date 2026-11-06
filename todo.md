@@ -45,4 +45,14 @@
   - Cached agent via `@st.cache_resource`
   - Source expander under assistant responses displaying statutory citations
   - Friendly error handling via `st.error`
-- [ ] Verify `make dev-setup`, `uv run python -m kp_agent.evaluator`, and app execution
+- [x] Verify `make dev-setup`, `uv run python -m kp_agent.evaluator`, and app execution
+
+# Tasks - Phase 4: Agentic RAG with Subagents, Vector Search MMR & Query Rewriter, Checkpointers
+- [x] Create `features.yaml` with subagent stages switchable via YAML
+- [x] Update `kp_agent/config.py` to parse `features.yaml` and support feature toggles
+- [x] Create `schemas/agent.py` for structured responses and update `schemas/chat.py`
+- [x] Upgrade `kp_agent/tools.py` with `QueryRewriter` (max 3 variants) and client-side MMR reranking
+- [x] Create `kp_agent/subagents.py` with `RequestEvaluator` (query classifier & router) and `ResponseVerifier` (faithfulness & citation verifier)
+- [x] Upgrade `kp_agent/agent.py` with LangGraph Agentic RAG workflow, verification loop, checkpointer, and structured response
+- [x] Update Streamlit `app.py` and `ui/session.py` to display verification badges, query rewrites expander, and multi-turn state
+- [x] Test and verify all components and YAML toggles

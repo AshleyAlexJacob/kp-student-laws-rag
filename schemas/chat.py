@@ -22,4 +22,7 @@ class Message:
         default_factory=lambda: datetime.datetime.now().strftime("%I:%M %p")
     )
     sources: List[Dict[str, Any]] = field(default_factory=list)
+    verification_count: int = 0
+    verification_status: str = "verified"
+    query_variants: List[str] = field(default_factory=list)
 
