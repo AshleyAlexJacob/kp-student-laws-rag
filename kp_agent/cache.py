@@ -97,11 +97,20 @@ class SemanticCache:
             query_vector = self.embeddings.embed_query(clean_query)
 
             # Query the closest existing cache point
-            search_results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=query_vector,
-                limit=1,  # inspect top single match
-            )
+            if hasattr(self.client, "query_points"):
+                cache_resp = self.client.query_points(
+                    collection_name=self.collection_name,
+                    query=query_vector,
+                    limit=1,  # inspect top single match
+                    with_payload=True,
+                )
+                search_results = cache_resp.points
+            else:
+                search_results = self.client.search(
+                    collection_name=self.collection_name,
+                    query_vector=query_vector,
+                    limit=1,  # inspect top single match
+                )
 
             if not search_results:
                 logger.warning("Cache miss (no entries found) for query: '%s'", clean_query[:60])

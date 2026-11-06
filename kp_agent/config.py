@@ -5,13 +5,65 @@ and `.env` files, supporting provider switches (openai, gemini, ollama),
 Qdrant vector database parameters, and filesystem paths.
 """
 
+from dataclasses import dataclass, field
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 from dotenv import load_dotenv
+import yaml
 
 # Load environment variables from .env file if present
 load_dotenv()
+
+
+@dataclass
+class FeatureFlags:
+    """Feature controls for subagents, retrieval pipeline, and caching.
+
+    Values are loaded from features.yaml with fallbacks to defaults.
+    """
+
+    enable_request_evaluator: bool = True
+    enable_query_rewriter: bool = True
+    enable_mmr_retrieval: bool = True
+    enable_response_verifier: bool = True
+    enable_semantic_cache: bool = True
+    max_query_variants: int = 3
+    max_verification_retries: int = 2
+    mmr_diversity_lambda: float = 0.7
+    retrieval_limit: int = 5
+
+    @classmethod
+    def load_from_yaml(cls, yaml_path: Path) -> "FeatureFlags":
+        """Load feature flags from a YAML configuration file.
+
+        Args:
+            yaml_path: Filesystem path to features.yaml.
+
+        Returns:
+            FeatureFlags: Configured feature flags instance.
+        """
+        if not yaml_path.exists():
+            return cls()
+
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                data: Dict[str, Any] = yaml.safe_load(f) or {}
+
+            raw_features: Dict[str, Any] = data.get("features", {})
+            return cls(
+                enable_request_evaluator=bool(raw_features.get("enable_request_evaluator", True)),
+                enable_query_rewriter=bool(raw_features.get("enable_query_rewriter", True)),
+                enable_mmr_retrieval=bool(raw_features.get("enable_mmr_retrieval", True)),
+                enable_response_verifier=bool(raw_features.get("enable_response_verifier", True)),
+                enable_semantic_cache=bool(raw_features.get("enable_semantic_cache", True)),
+                max_query_variants=int(raw_features.get("max_query_variants", 3)),
+                max_verification_retries=int(raw_features.get("max_verification_retries", 2)),
+                mmr_diversity_lambda=float(raw_features.get("mmr_diversity_lambda", 0.7)),
+                retrieval_limit=int(raw_features.get("retrieval_limit", 5)),
+            )
+        except Exception:
+            return cls()
 
 
 class Settings:
@@ -46,6 +98,10 @@ class Settings:
         self.metadata_file: Path = self.data_dir / "metadata.csv"
         self.test_set_file: Path = self.data_dir / "test_set.json"
         self.logs_dir: Path = self.base_dir / "logs"
+        self.features_file: Path = self.base_dir / "features.yaml"
+
+        # Load feature controls from YAML
+        self.features: FeatureFlags = FeatureFlags.load_from_yaml(self.features_file)
 
 
 # Cached singleton instance
