@@ -5,15 +5,30 @@ session switching, and distinct sender-receiver message color styling.
 Backend logic is deferred to subsequent project phases.
 """
 
-from typing import List
+from typing import List, Optional
 import streamlit as st
 
+from kp_agent.agent import LawAgent
 from kp_agent.logger import get_logger
 from schemas.chat import Message
 from ui.css import inject_styles
 from ui.session import SessionStore
 
 logger = get_logger(__name__)
+
+
+@st.cache_resource
+def get_agent() -> Optional[LawAgent]:
+    """Instantiate and cache the singleton LawAgent instance.
+
+    Returns:
+        Optional[LawAgent]: Initialized LawAgent or None if initialization fails.
+    """
+    try:
+        return LawAgent()
+    except Exception as exc:
+        logger.error("Failed to initialize LawAgent: %s", exc, exc_info=True)
+        return None
 
 
 class ChatApp:
@@ -92,6 +107,7 @@ class ChatApp:
             role = msg["role"]
             content = msg["content"]
             timestamp = msg.get("timestamp", "")
+            sources = msg.get("sources", [])
 
             if role == "user":
                 # Distinct teal container for user messages
@@ -120,23 +136,40 @@ class ChatApp:
                     unsafe_allow_html=True,
                 )
 
+                # Show sources under each answer in an st.expander per AGENTS.md rule
+                if sources:
+                    with st.expander(f"📚 Cited Legal Sources ({len(sources)})", expanded=False):
+                        for s_idx, src in enumerate(sources, start=1):
+                            citation = src.get("citation_header", f"Source {s_idx}")
+                            snippet = src.get("snippet", "")
+                            st.markdown(f"**{citation}**")
+                            if snippet:
+                                st.caption(snippet)
+
         # Chat Input at page bottom
         user_input = st.chat_input("Ask a question about Khyber Pakhtunkhwa education laws...")
         if user_input:
             clean_input = user_input.strip()
             if clean_input:
-                logger.info("Received user prompt in session %s", active_session["id"])
+                logger.info("Received user prompt in session %s: %s", active_session["id"], clean_input[:60])
                 # Record user question
                 self.session_store.add_message("user", clean_input)
 
-                # Simulated response for UI testing phase (no backend logic per requirement)
-                mock_response = (
-                    f"*(UI Phase Preview - Backend will be connected in future phases)*\n\n"
-                    f"Received query: **\"{clean_input}\"**.\n\n"
-                    f"In upcoming phases, this will search indexed KP education laws and cite "
-                    f"the specific law title, year, and section."
-                )
-                self.session_store.add_message("assistant", mock_response)
+                # Invoke LawAgent backend
+                agent = get_agent()
+                if agent is None:
+                    st.error("Unable to connect to the legal assistant backend. Please check your configuration.")
+                else:
+                    try:
+                        with st.spinner("Searching KP Education Laws..."):
+                            res = agent.ask(query=clean_input, thread_id=active_session["id"])
+                            answer = res.get("answer", "Not found in the KP laws provided.")
+                            sources = res.get("sources", [])
+                            self.session_store.add_message("assistant", answer, sources=sources)
+                    except Exception as exc:
+                        logger.error("Error generating answer for query '%s': %s", clean_input, exc, exc_info=True)
+                        st.error("A system error occurred while consulting the laws database. Please try again.")
+
                 st.rerun()
 
     def run(self) -> None:

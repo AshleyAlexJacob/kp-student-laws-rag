@@ -121,20 +121,27 @@ class SessionStore:
                 else:
                     self.create_session("New Chat")
 
-    def add_message(self, role: str, content: str) -> None:
+    def add_message(
+        self,
+        role: str,
+        content: str,
+        sources: Optional[List[Dict[str, Any]]] = None,
+    ) -> None:
         """Add a message to the currently active session.
 
         Args:
             role: Sender role ('user' or 'assistant').
             content: Text body of the message.
+            sources: Optional list of retrieved legal citations.
         """
         session = self.get_active_session()
-        msg = Message(role=role, content=content)
+        msg = Message(role=role, content=content, sources=sources or [])
         session["messages"].append(
             {
                 "role": msg.role,
                 "content": msg.content,
                 "timestamp": msg.timestamp,
+                "sources": msg.sources,
             }
         )
         # Update session title automatically on first user prompt
