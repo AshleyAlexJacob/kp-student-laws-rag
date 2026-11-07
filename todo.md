@@ -56,3 +56,11 @@
 - [x] Upgrade `kp_agent/agent.py` with LangGraph Agentic RAG workflow, verification loop, checkpointer, and structured response
 - [x] Update Streamlit `app.py` and `ui/session.py` to display verification badges, query rewrites expander, and multi-turn state
 - [x] Test and verify all components and YAML toggles
+
+# Tasks - Phase 5: Ragas Evaluation Framework Integration
+- [x] Create `evaluation.yaml` with metric feature flags, model selection, timeouts, and concurrency tweaks
+- [x] Update `kp_agent/config.py` to parse `evaluation.yaml` (`EvaluationConfig`)
+- [x] Update `kp_agent/models.py` (`ModelFactory`) to support explicit model and provider overrides
+- [x] Update `kp_agent/evaluator.py` (`RagEvaluator`) to evaluate benchmark test set using native Ragas dataset and metrics
+- [x] Add `make evaluate` target to `Makefile` with `eval` alias
+- [x] Integrate Ragas evaluation pipeline with test set, configuration, and Makefile target

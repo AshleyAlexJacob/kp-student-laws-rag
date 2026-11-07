@@ -66,6 +66,120 @@ class FeatureFlags:
             return cls()
 
 
+@dataclass
+class EvaluationModelsConfig:
+    """Model selection for the evaluation judge and embeddings."""
+
+    provider: Optional[str] = None
+    judge_model: Optional[str] = None
+    embedding_model: Optional[str] = None
+    temperature: float = 0.0
+
+
+@dataclass
+class EvaluationFeatureFlags:
+    """Metric feature flags for Ragas."""
+
+    enable_faithfulness: bool = True
+    enable_answer_relevance: bool = True
+    enable_context_recall: bool = True
+    enable_answer_correctness: bool = True
+    enable_context_precision: bool = False
+    enable_semantic_similarity: bool = False
+
+
+@dataclass
+class RagasRunConfigSettings:
+    """Runtime execution settings for Ragas evaluation."""
+
+    max_workers: int = 2
+    timeout: int = 90
+    max_retries: int = 3
+    batch_size: int = 5
+    raise_exceptions: bool = False
+    show_progress: bool = True
+
+
+@dataclass
+class EvaluationBenchmarkConfig:
+    """Benchmark dataset and output file configuration."""
+
+    test_set_path: str = "data/test_set.json"
+    output_dir: str = "logs"
+    output_json: str = "logs/ragas_eval_results.json"
+    output_csv: str = "logs/ragas_eval_results.csv"
+    default_sample_limit: Optional[int] = None
+    save_detailed_reports: bool = True
+
+
+@dataclass
+class EvaluationConfig:
+    """Top-level evaluation configuration loaded from evaluation.yaml."""
+
+    models: EvaluationModelsConfig = field(default_factory=EvaluationModelsConfig)
+    feature_flags: EvaluationFeatureFlags = field(default_factory=EvaluationFeatureFlags)
+    ragas_config: RagasRunConfigSettings = field(default_factory=RagasRunConfigSettings)
+    benchmark: EvaluationBenchmarkConfig = field(default_factory=EvaluationBenchmarkConfig)
+
+    @classmethod
+    def load_from_yaml(cls, yaml_path: Path) -> "EvaluationConfig":
+        """Load evaluation configuration from evaluation.yaml.
+
+        Args:
+            yaml_path: Filesystem path to evaluation.yaml.
+
+        Returns:
+            EvaluationConfig: Parsed evaluation configuration.
+        """
+        if not yaml_path.exists():
+            return cls()
+
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                data: Dict[str, Any] = yaml.safe_load(f) or {}
+
+            eval_data = data.get("evaluation", {})
+            models_data = eval_data.get("models", {})
+            flags_data = eval_data.get("feature_flags", {})
+            ragas_data = eval_data.get("ragas_config", {})
+            bench_data = eval_data.get("benchmark", {})
+
+            return cls(
+                models=EvaluationModelsConfig(
+                    provider=models_data.get("provider"),
+                    judge_model=models_data.get("judge_model"),
+                    embedding_model=models_data.get("embedding_model"),
+                    temperature=float(models_data.get("temperature", 0.0)),
+                ),
+                feature_flags=EvaluationFeatureFlags(
+                    enable_faithfulness=bool(flags_data.get("enable_faithfulness", True)),
+                    enable_answer_relevance=bool(flags_data.get("enable_answer_relevance", True)),
+                    enable_context_recall=bool(flags_data.get("enable_context_recall", True)),
+                    enable_answer_correctness=bool(flags_data.get("enable_answer_correctness", True)),
+                    enable_context_precision=bool(flags_data.get("enable_context_precision", False)),
+                    enable_semantic_similarity=bool(flags_data.get("enable_semantic_similarity", False)),
+                ),
+                ragas_config=RagasRunConfigSettings(
+                    max_workers=int(ragas_data.get("max_workers", 2)),
+                    timeout=int(ragas_data.get("timeout", 90)),
+                    max_retries=int(ragas_data.get("max_retries", 3)),
+                    batch_size=int(ragas_data.get("batch_size", 5)),
+                    raise_exceptions=bool(ragas_data.get("raise_exceptions", False)),
+                    show_progress=bool(ragas_data.get("show_progress", True)),
+                ),
+                benchmark=EvaluationBenchmarkConfig(
+                    test_set_path=str(bench_data.get("test_set_path", "data/test_set.json")),
+                    output_dir=str(bench_data.get("output_dir", "logs")),
+                    output_json=str(bench_data.get("output_json", "logs/ragas_eval_results.json")),
+                    output_csv=str(bench_data.get("output_csv", "logs/ragas_eval_results.csv")),
+                    default_sample_limit=bench_data.get("default_sample_limit"),
+                    save_detailed_reports=bool(bench_data.get("save_detailed_reports", True)),
+                ),
+            )
+        except Exception:
+            return cls()
+
+
 class Settings:
     """Application settings and configuration parameters."""
 
@@ -99,9 +213,13 @@ class Settings:
         self.test_set_file: Path = self.data_dir / "test_set.json"
         self.logs_dir: Path = self.base_dir / "logs"
         self.features_file: Path = self.base_dir / "features.yaml"
+        self.evaluation_file: Path = self.base_dir / "evaluation.yaml"
 
         # Load feature controls from YAML
         self.features: FeatureFlags = FeatureFlags.load_from_yaml(self.features_file)
+
+        # Load evaluation configuration from YAML
+        self.evaluation: EvaluationConfig = EvaluationConfig.load_from_yaml(self.evaluation_file)
 
 
 # Cached singleton instance

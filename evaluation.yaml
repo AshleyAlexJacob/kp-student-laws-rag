@@ -1,0 +1,39 @@
+# evaluation.yaml - Configuration and Feature Flags for Ragas Evaluation
+# Controls metrics, judge models, run thresholds, concurrency, and dataset parameters.
+
+evaluation:
+  # Model Selection for Evaluation Judge & Embeddings
+  # Set specific models/provider for evaluation or leave null to inherit from Settings (.env)
+  models:
+    provider: openai                  # 'openai' | 'gemini' | 'ollama' (null defaults to Settings.provider)
+    judge_model: gpt-4o               # e.g. "gpt-4o" (null defaults to Settings.chat_model)
+    embedding_model: text-embedding-3-large           # e.g. "text-embedding-3-large" (null defaults to Settings.embedding_model)
+    temperature: 0.0                # Sampling temperature for evaluation judge
+
+  # Feature Flags: Enable or disable specific Ragas metrics
+  feature_flags:
+    enable_faithfulness: true       # Measures factual grounding against retrieved contexts
+    enable_answer_relevance: true   # Measures answer relevance to user question
+    enable_context_recall: true     # Measures statutory coverage against ground truth
+    enable_answer_correctness: true # Measures factual accuracy against reference answer
+    enable_context_precision: false # Signal-to-noise ratio in retrieved context chunks
+    enable_semantic_similarity: false # Vector cosine similarity between answer and ground truth
+
+  # Ragas Execution Config (timeouts, retries, and concurrency tweaks)
+  ragas_config:
+    max_workers: 2                  # Parallel worker count to stay within API rate limits
+    timeout: 90                     # Timeout in seconds per evaluation request
+    max_retries: 3                  # Retry attempts for transient API or network errors
+    batch_size: 5                   # Batch size for evaluation processing
+    raise_exceptions: false         # Continue evaluation if individual sample scores error
+    show_progress: true             # Show progress indicator during evaluation
+
+  # Benchmark & Output Settings
+  benchmark:
+    test_set_path: "data/test_set.json"
+    output_dir: "logs"
+    output_json: "logs/ragas_eval_results.json"
+    output_csv: "logs/ragas_eval_results.csv"
+    default_sample_limit: null      # Integer limit or null for full test set
+    save_detailed_reports: true     # Export pandas DataFrame and detailed JSON
+

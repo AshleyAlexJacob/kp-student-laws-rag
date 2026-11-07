@@ -1,23 +1,67 @@
 """Evaluation module for KP Education Laws Agent.
 
-Implements the RagEvaluator class assessing RAG pipeline quality across
-faithfulness, answer relevance, context recall, and statutory correctness
-using the canonical benchmark test set (data/test_set.json).
+Implements the RagEvaluator class integrating the Ragas evaluation framework
+assessing RAG pipeline quality across faithfulness, answer relevance, context recall,
+and statutory correctness using the canonical benchmark test set (data/test_set.json).
 """
 
 import argparse
+import csv
 import json
-import re
-from dataclasses import asdict, dataclass
+import math
+import sys
+import types
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+# Compatibility shim: ragas 0.3.1 contains an unconditioned import of
+# langchain_community.chat_models.vertexai, which was removed in langchain-community >= 0.3.
+if "langchain_community.chat_models.vertexai" not in sys.modules:
+    _v_chat_mod = types.ModuleType("langchain_community.chat_models.vertexai")
+
+    class ChatVertexAI:
+        """Compatibility dummy for removed langchain_community ChatVertexAI."""
+        pass
+
+    _v_chat_mod.ChatVertexAI = ChatVertexAI
+    sys.modules["langchain_community.chat_models.vertexai"] = _v_chat_mod
+
+from ragas import RunConfig, evaluate
+from ragas.dataset_schema import EvaluationDataset, SingleTurnSample
+from ragas.metrics import (
+    answer_correctness,
+    answer_relevancy,
+    answer_similarity,
+    context_precision,
+    context_recall,
+    faithfulness,
+)
 
 from kp_agent.agent import LawAgent
-from kp_agent.config import Settings, get_settings
+from kp_agent.config import EvaluationConfig, Settings, get_settings
 from kp_agent.logger import get_logger
 from kp_agent.models import ModelFactory
 
 logger = get_logger(__name__)
+
+
+def _clean_score(val: Any) -> float:
+    """Safely convert metric score to float, mapping NaN or None to 0.0.
+
+    Args:
+        val: Metric score value from Ragas result.
+
+    Returns:
+        float: Normalized float score between 0.0 and 1.0.
+    """
+    if val is None:
+        return 0.0
+    try:
+        f = float(val)
+        return 0.0 if math.isnan(f) else round(f, 4)
+    except (ValueError, TypeError):
+        return 0.0
 
 
 @dataclass
@@ -34,32 +78,60 @@ class EvalResult:
     relevance: float
     context_recall: float
     correctness: float
-    reason: str
+    extra_metrics: Dict[str, float] = field(default_factory=dict)
+    reason: str = ""
 
 
 class RagEvaluator:
-    """Evaluates agent responses against ground truth benchmarks."""
+    """Evaluates agent responses against ground truth benchmarks using Ragas."""
 
     def __init__(
         self,
         settings: Optional[Settings] = None,
         agent: Optional[LawAgent] = None,
+        eval_config: Optional[EvaluationConfig] = None,
     ) -> None:
-        """Initialize the RAG evaluator with agent and judge model.
+        """Initialize the RAG evaluator with agent, judge LLM, and embeddings model.
 
         Args:
             settings: Application configuration settings. Defaults to singleton.
             agent: LawAgent instance under evaluation.
+            eval_config: Evaluation configuration from evaluation.yaml.
         """
         self.settings = settings or get_settings()
         self.agent = agent or LawAgent(settings=self.settings, enable_cache=False)
-        self.judge_model = ModelFactory.get_chat_model(self.settings, temperature=0.0)
+        self.eval_config = eval_config or self.settings.evaluation
+
+        # Configure evaluation judge model and embeddings based on evaluation.yaml
+        models_cfg = self.eval_config.models
+        judge_provider = models_cfg.provider or self.settings.provider
+        judge_model_name = models_cfg.judge_model or self.settings.chat_model
+        embed_model_name = models_cfg.embedding_model or self.settings.embedding_model
+
+        logger.info(
+            "Initializing Ragas evaluation models: Provider=%s, Judge=%s, Embeddings=%s",
+            judge_provider,
+            judge_model_name,
+            embed_model_name,
+        )
+
+        self.judge_model = ModelFactory.get_chat_model(
+            self.settings,
+            temperature=models_cfg.temperature,
+            model_name=judge_model_name,
+            provider=judge_provider,
+        )
+        self.embeddings_model = ModelFactory.get_embeddings(
+            self.settings,
+            model_name=embed_model_name,
+            provider=judge_provider,
+        )
 
     def load_test_set(self, test_set_path: Optional[Path] = None) -> List[Dict[str, Any]]:
         """Load evaluation test set questions and ground truths.
 
         Args:
-            test_set_path: Path to test_set.json. Defaults to data/test_set.json.
+            test_set_path: Path to test_set.json. Defaults to configured path.
 
         Returns:
             List[Dict[str, Any]]: Parsed test cases.
@@ -67,7 +139,9 @@ class RagEvaluator:
         Raises:
             FileNotFoundError: If the test set JSON file does not exist.
         """
-        path = test_set_path or self.settings.test_set_file
+        raw_path = test_set_path or Path(self.eval_config.benchmark.test_set_path)
+        path = raw_path if raw_path.is_absolute() else (self.settings.base_dir / raw_path)
+
         if not path.exists():
             logger.error("Test set file not found at: %s", path)
             raise FileNotFoundError(f"Test set file not found: {path}")
@@ -78,135 +152,37 @@ class RagEvaluator:
         logger.info("Loaded %d test set questions from %s", len(data), path.name)
         return data
 
-    def _judge_sample(
-        self,
-        question: str,
-        question_type: str,
-        ground_truth: str,
-        agent_answer: str,
-        context_snippets: List[str],
-    ) -> Dict[str, Any]:
-        """Use the LLM judge to evaluate faithfulness, relevance, context recall, and correctness.
-
-        Args:
-            question: User inquiry.
-            question_type: Category ('factual', 'numeric', 'list', 'cross_law', 'unanswerable').
-            ground_truth: Authoritative benchmark answer.
-            agent_answer: Response generated by the agent.
-            context_snippets: Retrieved text chunks from the vector database.
+    def _build_metrics(self) -> List[Any]:
+        """Construct list of active Ragas metrics based on evaluation.yaml feature flags.
 
         Returns:
-            Dict[str, Any]: Scores (0.0 to 1.0) and justification.
+            List[Any]: Configured Ragas metric instances.
         """
-        context_text = "\n\n".join(context_snippets) if context_snippets else "No context retrieved."
+        flags = self.eval_config.feature_flags
+        active_metrics: List[Any] = []
 
-        eval_prompt = f"""You are an impartial judge evaluating a Legal RAG system on Khyber Pakhtunkhwa (KP) education laws.
-Evaluate the agent's answer against the Question, Ground Truth, and Retrieved Context according to four specific criteria:
+        if flags.enable_faithfulness:
+            active_metrics.append(faithfulness)
+        if flags.enable_answer_relevance:
+            active_metrics.append(answer_relevancy)
+        if flags.enable_context_recall:
+            active_metrics.append(context_recall)
+        if flags.enable_answer_correctness:
+            active_metrics.append(answer_correctness)
+        if flags.enable_context_precision:
+            active_metrics.append(context_precision)
+        if flags.enable_semantic_similarity:
+            active_metrics.append(answer_similarity)
 
-1. Faithfulness (0.0 - 1.0):
-   Is every claim in the agent's answer completely grounded in the retrieved context?
-   If the question is unanswerable from the laws and the agent responds that it is not found, score 1.0.
-   If the agent hallucinates or states facts not present in the context, score 0.0 to 0.4.
+        logger.info("Configured %d Ragas metrics for evaluation run.", len(active_metrics))
+        return active_metrics
 
-2. Relevance (0.0 - 1.0):
-   Does the answer directly address the question without dodging or adding irrelevant commentary?
-
-3. Context Recall (0.0 - 1.0):
-   Did the retrieved context contain the essential facts and statutory sections needed to answer the question as stated in the Ground Truth?
-
-4. Correctness (0.0 - 1.0):
-   Does the agent's answer factually agree with the Ground Truth (numbers, percentages, penalties, authorities, law titles, sections)?
-   If Ground Truth indicates unanswerable/not found, and agent correctly says not found, score 1.0.
-
-Question: {question}
-Question Type: {question_type}
-Ground Truth: {ground_truth}
-Retrieved Context:
-{context_text}
-Agent Answer:
-{agent_answer}
-
-Respond ONLY with a valid JSON object in this format (no markdown, no backticks):
-{{
-  "faithfulness": 1.0,
-  "relevance": 1.0,
-  "context_recall": 1.0,
-  "correctness": 1.0,
-  "reason": "Brief one or two sentences explaining the scores."
-}}
-"""
-        try:
-            response = self.judge_model.invoke(eval_prompt)
-            raw_text = str(response.content).strip()
-            # Clean possible markdown formatting
-            clean_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text, flags=re.MULTILINE).strip()
-            parsed = json.loads(clean_text)
-
-            return {
-                "faithfulness": float(parsed.get("faithfulness", 0.0)),
-                "relevance": float(parsed.get("relevance", 0.0)),
-                "context_recall": float(parsed.get("context_recall", 0.0)),
-                "correctness": float(parsed.get("correctness", 0.0)),
-                "reason": str(parsed.get("reason", "")),
-            }
-        except Exception as exc:
-            logger.warning("LLM judge failed for question '%s': %s. Falling back to heuristic scoring.", question[:40], exc)
-            return self._heuristic_judge(question_type, ground_truth, agent_answer, context_snippets)
-
-    def _heuristic_judge(
+    def evaluate_all(
         self,
-        question_type: str,
-        ground_truth: str,
-        agent_answer: str,
-        context_snippets: List[str],
-    ) -> Dict[str, Any]:
-        """Heuristic rule-based fallback judge for scoring when LLM judge is unavailable.
-
-        Args:
-            question_type: Category of the question.
-            ground_truth: Ground truth string.
-            agent_answer: Agent answer string.
-            context_snippets: Context chunks.
-
-        Returns:
-            Dict[str, Any]: Heuristic score dict.
-        """
-        answer_lower = agent_answer.lower()
-        gt_lower = ground_truth.lower()
-
-        # Handle unanswerable questions
-        if question_type == "unanswerable" or "not found" in gt_lower:
-            is_refused = "not found" in answer_lower or "does not" in answer_lower or "no penalty" in answer_lower
-            score = 1.0 if is_refused else 0.0
-            return {
-                "faithfulness": score,
-                "relevance": 1.0 if is_refused else 0.5,
-                "context_recall": 1.0,
-                "correctness": score,
-                "reason": "Correctly detected unanswerable question per statutory scope." if is_refused else "Failed to refuse unanswerable query.",
-            }
-
-        # Check key numeric or keyword overlap
-        gt_words = set(re.findall(r"\b[a-zA-Z0-9]{3,}\b", gt_lower))
-        ans_words = set(re.findall(r"\b[a-zA-Z0-9]{3,}\b", answer_lower))
-        overlap = len(gt_words.intersection(ans_words)) / max(len(gt_words), 1)
-
-        has_sources = len(context_snippets) > 0
-        correctness = min(1.0, round(overlap * 1.5, 2))
-        faithfulness = 1.0 if has_sources else 0.0
-        relevance = 1.0 if overlap > 0.3 else 0.5
-        context_recall = 1.0 if has_sources else 0.0
-
-        return {
-            "faithfulness": faithfulness,
-            "relevance": relevance,
-            "context_recall": context_recall,
-            "correctness": correctness,
-            "reason": f"Heuristic overlap ratio: {overlap:.2f}",
-        }
-
-    def evaluate_all(self, limit: Optional[int] = None, question_id: Optional[str] = None) -> List[EvalResult]:
-        """Run evaluation over the benchmark test set.
+        limit: Optional[int] = None,
+        question_id: Optional[str] = None,
+    ) -> List[EvalResult]:
+        """Run complete Ragas evaluation over the benchmark test set.
 
         Args:
             limit: Optional maximum number of test questions to evaluate.
@@ -217,54 +193,119 @@ Respond ONLY with a valid JSON object in this format (no markdown, no backticks)
         """
         test_set = self.load_test_set()
 
+        # Filter by single ID if requested
         if question_id:
             test_set = [item for item in test_set if item.get("id") == question_id]
             if not test_set:
                 logger.error("No question found matching ID: %s", question_id)
                 return []
 
-        if limit is not None and limit > 0:
-            test_set = test_set[:limit]
+        # Apply sample limit (explicit argument takes priority over YAML default)
+        effective_limit = limit if limit is not None else self.eval_config.benchmark.default_sample_limit
+        if effective_limit is not None and effective_limit > 0:
+            test_set = test_set[:effective_limit]
 
-        results: List[EvalResult] = []
         total = len(test_set)
-        logger.info("Beginning RAG evaluation on %d test questions...", total)
+        logger.info("Beginning RAG evaluation on %d test questions with Ragas...", total)
 
+        samples: List[SingleTurnSample] = []
+        raw_meta: List[Dict[str, Any]] = []
+
+        # Step 1: Collect agent responses and retrieved context chunks
         for idx, item in enumerate(test_set, start=1):
             q_id = item.get("id", f"q-{idx}")
             question = item["question"]
             gt = item["ground_truth"]
             q_type = item.get("question_type", "factual")
 
-            logger.info("[%d/%d] Evaluating %s (%s): '%s'", idx, total, q_id, q_type, question[:60])
+            logger.info("[%d/%d] Asking LawAgent (%s - %s): '%s'", idx, total, q_id, q_type, question[:60])
 
-            # Ask agent (distinct thread per test question to ensure isolation)
+            # Ask agent with dedicated thread_id for isolation
             agent_res = self.agent.ask(query=question, thread_id=f"eval_{q_id}", use_cache=False)
             answer = agent_res.get("answer", "")
             sources = agent_res.get("sources", [])
-            snippets = [s.get("snippet", "") for s in sources]
 
-            # Judge response
-            scores = self._judge_sample(
-                question=question,
-                question_type=q_type,
-                ground_truth=gt,
-                agent_answer=answer,
-                context_snippets=snippets,
+            # Extract retrieved statutory text snippets
+            snippets = [s.get("snippet", "").strip() for s in sources if s.get("snippet")]
+            # Guarantee at least one context string so Ragas does not fail on empty contexts
+            contexts = snippets if snippets else ["No statutory context retrieved."]
+
+            sample = SingleTurnSample(
+                user_input=question,
+                response=answer,
+                reference=gt,
+                retrieved_contexts=contexts,
             )
+            samples.append(sample)
+            raw_meta.append({
+                "id": q_id,
+                "question": question,
+                "question_type": q_type,
+                "ground_truth": gt,
+                "agent_answer": answer,
+                "sources_retrieved": len(sources),
+            })
+
+        # Step 2: Build EvaluationDataset and configure Ragas RunConfig
+        eval_dataset = EvaluationDataset(samples=samples)
+        metrics = self._build_metrics()
+
+        ragas_cfg = self.eval_config.ragas_config
+        run_config = RunConfig(
+            timeout=ragas_cfg.timeout,
+            max_retries=ragas_cfg.max_retries,
+            max_workers=ragas_cfg.max_workers,
+        )
+
+        logger.info(
+            "Executing ragas.evaluate (workers=%d, timeout=%ds, retries=%d)...",
+            ragas_cfg.max_workers,
+            ragas_cfg.timeout,
+            ragas_cfg.max_retries,
+        )
+
+        # Step 3: Execute Ragas evaluation
+        eval_result = evaluate(
+            dataset=eval_dataset,
+            metrics=metrics,
+            llm=self.judge_model,
+            embeddings=self.embeddings_model,
+            run_config=run_config,
+            raise_exceptions=ragas_cfg.raise_exceptions,
+            show_progress=ragas_cfg.show_progress,
+            batch_size=ragas_cfg.batch_size,
+        )
+
+        # Step 4: Map Ragas result scores to EvalResult instances
+        scores_list = eval_result.scores
+        results: List[EvalResult] = []
+
+        for idx, meta in enumerate(raw_meta):
+            score_dict = scores_list[idx] if idx < len(scores_list) else {}
+            faith = _clean_score(score_dict.get("faithfulness"))
+            rel = _clean_score(score_dict.get("answer_relevancy"))
+            rec = _clean_score(score_dict.get("context_recall"))
+            corr = _clean_score(score_dict.get("answer_correctness"))
+
+            # Extract any additional enabled metric scores
+            extra = {
+                k: _clean_score(v)
+                for k, v in score_dict.items()
+                if k not in {"faithfulness", "answer_relevancy", "context_recall", "answer_correctness"}
+            }
 
             res = EvalResult(
-                question_id=q_id,
-                question=question,
-                question_type=q_type,
-                ground_truth=gt,
-                agent_answer=answer,
-                sources_retrieved=len(sources),
-                faithfulness=scores["faithfulness"],
-                relevance=scores["relevance"],
-                context_recall=scores["context_recall"],
-                correctness=scores["correctness"],
-                reason=scores["reason"],
+                question_id=meta["id"],
+                question=meta["question"],
+                question_type=meta["question_type"],
+                ground_truth=meta["ground_truth"],
+                agent_answer=meta["agent_answer"],
+                sources_retrieved=meta["sources_retrieved"],
+                faithfulness=faith,
+                relevance=rel,
+                context_recall=rec,
+                correctness=corr,
+                extra_metrics=extra,
             )
             results.append(res)
 
@@ -281,7 +322,7 @@ Respond ONLY with a valid JSON object in this format (no markdown, no backticks)
             return
 
         print("\n" + "=" * 90)
-        print(f"KHYBER PAKHTUNKHWA EDUCATION LAWS RAG AGENT - EVALUATION REPORT ({len(results)} SAMPLES)")
+        print(f"KHYBER PAKHTUNKHWA EDUCATION LAWS RAG AGENT - RAGAS EVALUATION ({len(results)} SAMPLES)")
         print("=" * 90)
         print(f"{'ID':<8} | {'Type':<14} | {'Faith.':<6} | {'Relev.':<6} | {'Recall':<6} | {'Corr.':<6} | {'Sources':<7}")
         print("-" * 90)
@@ -323,35 +364,79 @@ Respond ONLY with a valid JSON object in this format (no markdown, no backticks)
             )
         print("=" * 75 + "\n")
 
-    def save_results(self, results: List[EvalResult], output_path: Optional[Path] = None) -> Path:
-        """Save detailed evaluation results to a JSON file.
+    def save_results(
+        self,
+        results: List[EvalResult],
+        output_json_path: Optional[Path] = None,
+        output_csv_path: Optional[Path] = None,
+    ) -> Tuple[Path, Optional[Path]]:
+        """Save detailed evaluation results to JSON and CSV files.
 
         Args:
             results: List of evaluation result records.
-            output_path: Target JSON filepath. Defaults to logs/eval_results.json.
+            output_json_path: Target JSON filepath.
+            output_csv_path: Target CSV filepath.
 
         Returns:
-            Path: Filepath where results were stored.
+            Tuple[Path, Optional[Path]]: Paths to written JSON and CSV files.
         """
-        out_file = output_path or (self.settings.logs_dir / "eval_results.json")
-        out_file.parent.mkdir(parents=True, exist_ok=True)
+        raw_json = output_json_path or Path(self.eval_config.benchmark.output_json)
+        json_file = raw_json if raw_json.is_absolute() else (self.settings.base_dir / raw_json)
+        json_file.parent.mkdir(parents=True, exist_ok=True)
 
+        # Write JSON report
         payload = [asdict(r) for r in results]
-        with open(out_file, "w", encoding="utf-8") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
+        logger.info("Saved evaluation JSON report to %s", json_file)
 
-        logger.info("Saved evaluation results to %s", out_file)
-        return out_file
+        # Write CSV report if requested or configured
+        csv_file: Optional[Path] = None
+        if self.eval_config.benchmark.save_detailed_reports:
+            raw_csv = output_csv_path or Path(self.eval_config.benchmark.output_csv)
+            csv_file = raw_csv if raw_csv.is_absolute() else (self.settings.base_dir / raw_csv)
+            csv_file.parent.mkdir(parents=True, exist_ok=True)
+
+            fieldnames = [
+                "question_id",
+                "question_type",
+                "faithfulness",
+                "relevance",
+                "context_recall",
+                "correctness",
+                "sources_retrieved",
+                "question",
+                "ground_truth",
+                "agent_answer",
+            ]
+            with open(csv_file, "w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+                writer.writeheader()
+                for r in results:
+                    writer.writerow(asdict(r))
+            logger.info("Saved evaluation CSV report to %s", csv_file)
+
+        return json_file, csv_file
 
 
 def main() -> None:
-    """CLI entrypoint for running RAG evaluation."""
-    parser = argparse.ArgumentParser(description="Evaluate KP Education Laws Agent against test set.")
+    """CLI entrypoint for running RAG evaluation with Ragas."""
+    parser = argparse.ArgumentParser(description="Evaluate KP Education Laws Agent against test set with Ragas.")
     parser.add_argument("--limit", type=int, default=None, help="Maximum number of test questions to evaluate.")
     parser.add_argument("--id", type=str, default=None, help="Evaluate a single question by its ID (e.g. kp-01).")
+    parser.add_argument("--config", type=str, default=None, help="Custom path to evaluation.yaml.")
     args = parser.parse_args()
 
-    evaluator = RagEvaluator()
+    settings = get_settings()
+    eval_config = None
+    if args.config:
+        custom_cfg_path = Path(args.config)
+        if custom_cfg_path.exists():
+            eval_config = EvaluationConfig.load_from_yaml(custom_cfg_path)
+        else:
+            logger.warning("Custom config path %s not found, using default.", args.config)
+
+    evaluator = RagEvaluator(settings=settings, eval_config=eval_config)
     results = evaluator.evaluate_all(limit=args.limit, question_id=args.id)
     evaluator.print_summary(results)
     evaluator.save_results(results)
@@ -359,4 +444,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
