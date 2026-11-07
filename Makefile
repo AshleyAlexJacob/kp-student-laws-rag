@@ -1,4 +1,4 @@
-.PHONY: help dev-setup app ingest eval clean
+.PHONY: help dev-setup app ingest eval evaluate clean
 
 # Default python and virtual environment path
 VENV_DIR = .venv
@@ -11,6 +11,7 @@ help:
 	@echo "  make app        : Run the Streamlit application"
 	@echo "  make ingest     : Parse laws and index embeddings into Qdrant"
 	@echo "  make eval       : Run the RAG test set evaluation benchmark"
+	@echo "  make evaluate   : Run the RAG test set evaluation benchmark with Ragas"
 	@echo "  make clean      : Remove virtual environment and cached files"
 
 dev-setup:
@@ -46,17 +47,19 @@ ingest:
 		$(PYTHON) -m kp_agent.ingest; \
 	fi
 
-eval:
+evaluate:
 	@if [ ! -d "$(VENV_DIR)" ]; then \
 		echo "Virtual environment not found. Running make dev-setup first..."; \
 		$(MAKE) dev-setup; \
 	fi
-	@echo "Running RAG benchmark evaluation against test set..."
+	@echo "Running RAG benchmark evaluation with Ragas against test set..."
 	@if command -v uv >/dev/null 2>&1; then \
 		uv run python -m kp_agent.evaluator; \
 	else \
 		$(PYTHON) -m kp_agent.evaluator; \
 	fi
+
+eval: evaluate
 
 clean:
 	@echo "Cleaning environment and cache..."

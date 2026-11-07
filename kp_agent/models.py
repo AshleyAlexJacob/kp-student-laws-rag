@@ -18,11 +18,18 @@ class ModelFactory:
     """Factory class to instantiate chat models and embeddings."""
 
     @classmethod
-    def get_embeddings(cls, settings: Optional[Settings] = None) -> Embeddings:
+    def get_embeddings(
+        cls,
+        settings: Optional[Settings] = None,
+        model_name: Optional[str] = None,
+        provider: Optional[str] = None,
+    ) -> Embeddings:
         """Create and return an embeddings instance for the active provider.
 
         Args:
             settings: Optional application settings. Defaults to singleton.
+            model_name: Optional explicit embedding model name override.
+            provider: Optional explicit provider override ('openai', 'gemini', 'ollama').
 
         Returns:
             Embeddings: Initialized LangChain embeddings instance.
@@ -31,52 +38,63 @@ class ModelFactory:
             ValueError: If an unsupported provider is configured or API key is missing.
         """
         cfg = settings or get_settings()
-        provider = cfg.provider
+        active_provider = (provider or cfg.provider).lower()
 
-        if provider == "openai":
+        if active_provider == "openai":
             if not cfg.openai_api_key:
                 logger.error("OpenAI API key is missing in environment variables.")
                 raise ValueError("OPENAI_API_KEY environment variable is required for OpenAI provider.")
             from langchain_openai import OpenAIEmbeddings
 
-            logger.info("Initializing OpenAI embeddings with model: %s", cfg.embedding_model)
+            embed_model = model_name or cfg.embedding_model
+            logger.info("Initializing OpenAI embeddings with model: %s", embed_model)
             return OpenAIEmbeddings(
-                model=cfg.embedding_model,  # text-embedding-3-large
+                model=embed_model,  # text-embedding-3-large
                 api_key=cfg.openai_api_key,
             )
 
-        elif provider == "gemini":
+        elif active_provider == "gemini":
             if not cfg.google_api_key:
                 logger.error("Google API key is missing in environment variables.")
                 raise ValueError("GOOGLE_API_KEY environment variable is required for Gemini provider.")
             from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-            logger.info("Initializing Gemini embeddings.")
+            embed_model = model_name or "models/text-embedding-004"
+            logger.info("Initializing Gemini embeddings with model: %s", embed_model)
             return GoogleGenerativeAIEmbeddings(
-                model="models/text-embedding-004",  # standard Gemini embedding model
+                model=embed_model,  # standard Gemini embedding model
                 google_api_key=cfg.google_api_key,
             )
 
-        elif provider == "ollama":
+        elif active_provider == "ollama":
             from langchain_community.embeddings import OllamaEmbeddings
 
-            logger.info("Initializing Ollama embeddings at: %s", cfg.ollama_base_url)
+            embed_model = model_name or "nomic-embed-text"
+            logger.info("Initializing Ollama embeddings at: %s with model: %s", cfg.ollama_base_url, embed_model)
             return OllamaEmbeddings(
                 base_url=cfg.ollama_base_url,
-                model="nomic-embed-text",  # default local embedding model
+                model=embed_model,  # default local embedding model
             )
 
         else:
-            logger.error("Unsupported provider configured: %s", provider)
-            raise ValueError(f"Unsupported provider '{provider}'. Expected 'openai', 'gemini', or 'ollama'.")
+            logger.error("Unsupported provider configured: %s", active_provider)
+            raise ValueError(f"Unsupported provider '{active_provider}'. Expected 'openai', 'gemini', or 'ollama'.")
 
     @classmethod
-    def get_chat_model(cls, settings: Optional[Settings] = None, temperature: float = 0.0) -> BaseChatModel:
+    def get_chat_model(
+        cls,
+        settings: Optional[Settings] = None,
+        temperature: float = 0.0,
+        model_name: Optional[str] = None,
+        provider: Optional[str] = None,
+    ) -> BaseChatModel:
         """Create and return a chat model instance for the active provider.
 
         Args:
             settings: Optional application settings. Defaults to singleton.
             temperature: Sampling temperature for model generation (0.0 for deterministic legal QA).
+            model_name: Optional explicit chat model name override.
+            provider: Optional explicit provider override ('openai', 'gemini', 'ollama').
 
         Returns:
             BaseChatModel: Initialized LangChain chat model instance.
@@ -85,45 +103,48 @@ class ModelFactory:
             ValueError: If an unsupported provider is configured or API key is missing.
         """
         cfg = settings or get_settings()
-        provider = cfg.provider
+        active_provider = (provider or cfg.provider).lower()
 
-        if provider == "openai":
+        if active_provider == "openai":
             if not cfg.openai_api_key:
                 logger.error("OpenAI API key is missing in environment variables.")
                 raise ValueError("OPENAI_API_KEY environment variable is required for OpenAI provider.")
             from langchain_openai import ChatOpenAI
 
-            logger.info("Initializing OpenAI Chat Model: %s (temp=%s)", cfg.chat_model, temperature)
+            chat_m = model_name or cfg.chat_model
+            logger.info("Initializing OpenAI Chat Model: %s (temp=%s)", chat_m, temperature)
             return ChatOpenAI(
-                model=cfg.chat_model,  # gpt-4o
+                model=chat_m,  # gpt-4o
                 temperature=temperature,
                 api_key=cfg.openai_api_key,
             )
 
-        elif provider == "gemini":
+        elif active_provider == "gemini":
             if not cfg.google_api_key:
                 logger.error("Google API key is missing in environment variables.")
                 raise ValueError("GOOGLE_API_KEY environment variable is required for Gemini provider.")
             from langchain_google_genai import ChatGoogleGenerativeAI
 
-            logger.info("Initializing Gemini Chat Model.")
+            chat_m = model_name or "gemini-1.5-pro"
+            logger.info("Initializing Gemini Chat Model with model: %s (temp=%s)", chat_m, temperature)
             return ChatGoogleGenerativeAI(
-                model="gemini-1.5-pro",
+                model=chat_m,
                 temperature=temperature,
                 google_api_key=cfg.google_api_key,
             )
 
-        elif provider == "ollama":
+        elif active_provider == "ollama":
             from langchain_community.chat_models import ChatOllama
 
-            logger.info("Initializing Ollama Chat Model at: %s", cfg.ollama_base_url)
+            chat_m = model_name or "llama3"
+            logger.info("Initializing Ollama Chat Model at: %s with model: %s (temp=%s)", cfg.ollama_base_url, chat_m, temperature)
             return ChatOllama(
                 base_url=cfg.ollama_base_url,
-                model="llama3",
+                model=chat_m,
                 temperature=temperature,
             )
 
         else:
-            logger.error("Unsupported provider configured: %s", provider)
-            raise ValueError(f"Unsupported provider '{provider}'. Expected 'openai', 'gemini', or 'ollama'.")
+            logger.error("Unsupported provider configured: %s", active_provider)
+            raise ValueError(f"Unsupported provider '{active_provider}'. Expected 'openai', 'gemini', or 'ollama'.")
 
